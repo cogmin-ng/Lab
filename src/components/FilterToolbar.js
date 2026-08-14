@@ -1,16 +1,14 @@
 import React from 'react';
 
-function FilterToolbar({ searchTerm, setSearchTerm, statusFilter, setStatusFilter, searchInputRef }) {
+// Component thanh công cụ tìm kiếm và lọc dữ liệu học sinh
+function FilterToolbar({ searchTerm, setSearchTerm, statusFilter, setStatusFilter, onReset }) {
   return (
     <div className="card shadow-sm border-0 mb-4">
       <div className="card-body">
         <div className="row g-3 align-items-center">
-          { }
-          <div className="col-md-6">
-
+          <div className="col-md-5">
             <input
               id="nameFilter"
-              ref={searchInputRef}
               type="text"
               className="form-control"
               placeholder="Search by student name..."
@@ -18,9 +16,7 @@ function FilterToolbar({ searchTerm, setSearchTerm, statusFilter, setStatusFilte
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          { }
-          <div className="col-md-6">
-
+          <div className="col-md-5">
             <select
               id="statusFilter"
               className="form-select"
@@ -31,6 +27,11 @@ function FilterToolbar({ searchTerm, setSearchTerm, statusFilter, setStatusFilte
               <option value="PRESENT">Present</option>
               <option value="ABSENT">Absent</option>
             </select>
+          </div>
+          <div className="col-md-2">
+            <button className="btn btn-secondary w-100" onClick={onReset}>
+              Reset
+            </button>
           </div>
         </div>
       </div>

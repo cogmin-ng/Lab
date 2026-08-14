@@ -1,5 +1,6 @@
 import React from 'react';
 
+// Component hiển thị bảng danh sách điểm danh học sinh
 function AttendanceTable({ filteredAttendances, onToggleStatus, onDelete }) {
   return (
     <div className="card shadow-sm border-0">

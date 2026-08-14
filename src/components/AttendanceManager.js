@@ -1,14 +1,13 @@
-import React, { useReducer, useState, useMemo, useRef, useEffect } from 'react';
+import React, { useReducer, useState, useMemo, useEffect } from 'react';
 import { initialAttendances } from '../data';
 import Dashboard from './Dashboard';
 import FilterToolbar from './FilterToolbar';
 import AttendanceTable from './AttendanceTable';
 
-
+// xử lý state điểm danh 
 function attendanceReducer(state, action) {
   switch (action.type) {
     case 'TOGGLE_STATUS':
-
       return state.map(item => {
         if (item.id === action.payload) {
           return {
@@ -20,7 +19,6 @@ function attendanceReducer(state, action) {
       });
 
     case 'DELETE_RECORD':
-
       return state.filter(item => item.id !== action.payload);
 
     default:
@@ -28,50 +26,30 @@ function attendanceReducer(state, action) {
   }
 }
 
+// Hàm lấy dữ liệu điểm danh ban đầu từ file data
 function getInitialData() {
-  const saved = localStorage.getItem('attendances');
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-  }
   return initialAttendances;
 }
 
 function AttendanceManager() {
-
   const [state, dispatch] = useReducer(attendanceReducer, getInitialData());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const searchInputRef = useRef(null);
+
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
 
   useEffect(() => {
-    localStorage.setItem('attendances', JSON.stringify(state));
-  }, [state]);
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
-  useEffect(() => {
-    function handleKeyDown(event) {
-      if (event.key === '/') {
+  function toggleTheme() {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  }
 
-        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        if (activeTag !== 'input' && activeTag !== 'textarea' && activeTag !== 'select') {
-          event.preventDefault();
-          if (searchInputRef.current) {
-            searchInputRef.current.focus();
-          }
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-
+  // Lọc danh sách học sinh 
   const filteredAttendances = useMemo(() => {
     return state.filter(item => {
       const matchesName = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -80,7 +58,7 @@ function AttendanceManager() {
     });
   }, [state, searchTerm, statusFilter]);
 
-
+  // Tính tỷ lệ đi học 
   const stats = useMemo(() => {
     const total = filteredAttendances.length;
     const present = filteredAttendances.filter(item => item.status === 'PRESENT').length;
@@ -97,39 +75,48 @@ function AttendanceManager() {
     };
   }, [filteredAttendances]);
 
-
   function handleToggleStatus(id) {
     dispatch({ type: 'TOGGLE_STATUS', payload: id });
   }
 
-
+  // Hàm xóa học sinh 
   function handleDelete(id, name) {
-    const confirmDelete = window.confirm(`Are you sure you want to delete the attendance record for ${name}?`);
+    const confirmDelete = window.confirm(`Bạn muốn xóa record này đúng không ${name}?`);
     if (confirmDelete) {
       dispatch({ type: 'DELETE_RECORD', payload: id });
     }
   }
 
+
+  function handleResetFilters() {
+    setSearchTerm('');
+    setStatusFilter('ALL');
+  }
+
   return (
     <div className="container py-4">
-      {/* Page Title */}
-      <div className="text-center mb-4">
-        <h1 className="display-6 fw-bold text-black">Hệ Thống Quản Lý Điểm Danh Lớp Học</h1>
+      <div style={{ position: 'fixed', top: '15px', right: '15px', zIndex: 1050 }}>
+        <button className="btn btn-outline-secondary shadow-sm" onClick={toggleTheme}>
+          {theme === 'light' ? 'Tối' : 'Sáng'}
+        </button>
       </div>
 
-      {/* Toolbar filters */}
+      <div className="text-center mb-4">
+        <h1 className={`display-6 fw-bold ${theme === 'light' ? 'text-black' : 'text-white'}`}>
+          Hệ Thống Quản Lý Điểm Danh Lớp Học
+        </h1>
+      </div>
+
       <FilterToolbar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
-        searchInputRef={searchInputRef}
+        onReset={handleResetFilters}
       />
 
-      {/* Dashboard statistics */}
-      <Dashboard stats={stats} />
+      <Dashboard stats={stats} theme={theme} />
 
-      {/* Attendance table */}
       <AttendanceTable
         filteredAttendances={filteredAttendances}
         onToggleStatus={handleToggleStatus}
